@@ -1,2 +1,8 @@
 .DS_Store
 
+# data/raw/*.csv
+# data/datasets_inter/*.csv
+# data/processed/*.csv
+
+
+# !data/processed/.dvc/
