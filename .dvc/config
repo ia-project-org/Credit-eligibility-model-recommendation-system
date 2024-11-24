@@ -1,0 +1,4 @@
+[core]
+    remote = myremote
+['remote "myremote"']
+    url = hdfs://localhost:9000/user/hadoop/dvc_storage
