@@ -4,5 +4,7 @@
 # data/datasets_inter/*.csv
 # data/processed/*.csv
 
+venv/
+
 
 # !data/processed/.dvc/
