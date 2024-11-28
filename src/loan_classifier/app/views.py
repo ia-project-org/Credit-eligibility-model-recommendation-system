@@ -1,15 +1,16 @@
 # app/views.py
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-import numpy as np
 import json
-from .utils import model  # Ensure this is importing your trained model
+from .utils import model  
+from .utils import scaler
+import pandas as pd
+import numpy as np
 
 @csrf_exempt
 def predict_credit_score(request):
     if request.method == 'POST':
         try:
-            # Define the feature order for the input data (should be 46 features)
             feature_order = [
                 "month", "age", "annual_income", "monthly_inhand_salary", 
                 "total_emi_per_month", "num_bank_accounts", "num_credit_card", 
@@ -30,10 +31,8 @@ def predict_credit_score(request):
                 "occupation_Writer"
             ]
 
-            # Parse JSON input from request body
             data = json.loads(request.body)
 
-            # Encode categorical features to numeric values
             credit_mix_mapping = {
                 "Standard": 1,
                 "Good": 2,
@@ -45,11 +44,9 @@ def predict_credit_score(request):
                 "No": 0
             }
 
-            # Map the input features
-            data['credit_mix'] = credit_mix_mapping.get(data.get('credit_mix'), 0)  # Default to 0 if invalid value
-            data['payment_of_min_amount'] = payment_of_min_amount_mapping.get(data.get('payment_of_min_amount'), 0)  # Default to 0 if invalid value
+            data['credit_mix'] = credit_mix_mapping.get(data.get('credit_mix'), 0)
+            data['payment_of_min_amount'] = payment_of_min_amount_mapping.get(data.get('payment_of_min_amount'), 0) 
 
-            # Check if only one occupation and one loan type are set to 1
             loan_features = ["auto_loan", "credit_builder_loan", "debt_consolidation_loan", 
                              "home_equity_loan", "mortgage_loan", "no_loan", "payday_loan", 
                              "personal_loan", "student_loan"]
@@ -61,34 +58,27 @@ def predict_credit_score(request):
                 "occupation_Scientist", "occupation_Teacher", "occupation_Writer"
             ]
 
-            # Check if exactly one loan type and one occupation are selected
-            loan_count = sum([data.get(loan, 0) for loan in loan_features])
             occupation_count = sum([data.get(occupation, 0) for occupation in occupation_features])
 
-            if loan_count != 1:
-                return JsonResponse({"error": "Exactly one loan type should be selected."}, status=400)
+            if not any(data.get(loan, 0) for loan in loan_features):
+                return JsonResponse({"error": "At least one loan type must be selected."}, status=400)
+
             if occupation_count != 1:
                 return JsonResponse({"error": "Exactly one occupation should be selected."}, status=400)
 
-            # Prepare the input data for prediction
-            input_data = np.array([data.get(feature, 0) for feature in feature_order]).reshape(1, -1)
+            input_data = pd.DataFrame([data], columns=feature_order)
 
-            # Ensure the input matches the expected shape
-            if input_data.shape[1] != 46:
-                return JsonResponse({"error": "Incorrect number of features. Expected 46."}, status=400)
+            input_scaled = scaler.transform(input_data)
 
-            # Make prediction using the pre-loaded model
-            predictions = model.predict(input_data)
-            predicted_class = predictions.argmax(axis=1)[0]  # Class with the highest probability
+            predictions = model.predict(input_scaled)
+            predicted_class = predictions.argmax(axis=1)[0]  
 
-            # Map the predicted class to credit score
             credit_score_mapping = {
-                0: "Poor",  # Class 0: Poor
-                1: "Standard",  # Class 1: Standard
-                2: "Good"  # Class 2: Good
+                0: "Poor",  
+                1: "Standard",  
+                2: "Good" 
             }
 
-            # Return prediction as JSON response
             return JsonResponse({"credit_score": credit_score_mapping.get(predicted_class, "Unknown")})
 
         except Exception as e:
