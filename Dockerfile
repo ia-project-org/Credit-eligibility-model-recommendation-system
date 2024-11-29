@@ -1,12 +1,11 @@
-# For more information, please refer to https://aka.ms/vscode-docker-python
-FROM python:3.11-slim AS build-stage
+# Stage 1: Build stage using a fully featured Python image
+FROM python:3.11-slim AS base
 
+# Expose the port
 EXPOSE 8000
 
-# Keeps Python from generating .pyc files in the container
+# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
-
-# Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED=1
 
 # Install system dependencies required for Python packages
@@ -18,23 +17,30 @@ RUN apt-get update && apt-get install -y \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install pip requirements
-COPY requirements.txt .
-RUN python -m pip install --upgrade pip
-RUN python -m pip install -r requirements.txt
-
-# Stage 2: Runtime stage using distroless image
-FROM gcr.io/distroless/python3-debian12 AS runtime-stage
-
+# Set the working directory for the application
 WORKDIR /app
-COPY . /app
 
-# Copy the application and installed dependencies from the build stage
-COPY --from=build-stage /app /app
+# Copy only the requirements.txt first to take advantage of Docker's caching
+COPY requirements.txt /app/
 
-# Creates a non-root user with an explicit UID and adds permission to access the /app folder
-# For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
-RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
-USER appuser
+# Upgrade pip and install the Python dependencies
+RUN python -m pip install --upgrade pip && \
+    python -m pip install -r /app/requirements.txt
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "loan_classifier.wsgi"]
+# Stage 2: Runtime stage using the distroless image
+FROM gcr.io/distroless/python3-debian12
+
+# Set the working directory in the runtime container
+WORKDIR /app
+
+# Copy only the necessary Python libraries from the build stage
+COPY --from=base /usr/local/lib/python3.11 /usr/local/lib/python3.11
+COPY --from=base /usr/local/bin/python3 /usr/local/bin/python3
+COPY --from=base /usr/local/bin/pip /usr/local/bin/pip
+
+# Copy the application code into the container
+COPY ./src /app
+
+# Set the entrypoint to start the Django application
+ENTRYPOINT ["/usr/local/bin/python3", "manage.py"]
+CMD ["runserver", "0.0.0.0:8000"]
