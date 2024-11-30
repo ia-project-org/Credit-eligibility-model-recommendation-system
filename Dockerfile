@@ -10,7 +10,6 @@ ENV PYTHONUNBUFFERED=1
 
 # Install system dependencies required for Python packages
 RUN apt-get update && apt-get install -y \
-    libpq-dev \
     gcc \
     python3-dev \
     --no-install-recommends && \
@@ -28,19 +27,27 @@ RUN python -m pip install --upgrade pip && \
     python -m pip install -r /app/requirements.txt
 
 # Stage 2: Runtime stage using the distroless image
-FROM gcr.io/distroless/python3-debian12
+# FROM gcr.io/distroless/python3-debian12 AS runtime-stage
+FROM python:3.11-slim
 
 # Set the working directory in the runtime container
 WORKDIR /app
 
 # Copy only the necessary Python libraries from the build stage
-COPY --from=base /usr/local/lib/python3.11 /usr/local/lib/python3.11
-COPY --from=base /usr/local/bin/python3 /usr/local/bin/python3
-COPY --from=base /usr/local/bin/pip /usr/local/bin/pip
+# COPY --from=base /usr/local/lib/python3.11 /usr/local/lib/python3.11
+# COPY --from=base /usr/local/bin/python3 /usr/local/bin/python3
+# COPY --from=base /usr/local/bin/pip /usr/local/bin/pip
+
+
+COPY --from=base /usr/local /usr/local
+COPY --from=base /app /app
 
 # Copy the application code into the container
 COPY ./src /app
+COPY ./src/ml/scaler.pkl /app/ml/scaler.pkl
+COPY ./src/ml/100k_ann_model.keras /app/ml/100k_ann_model.keras
+
 
 # Set the entrypoint to start the Django application
-ENTRYPOINT ["/usr/local/bin/python3", "manage.py"]
+ENTRYPOINT ["python", "manage.py"]
 CMD ["runserver", "0.0.0.0:8000"]
