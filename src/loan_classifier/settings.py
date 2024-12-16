@@ -16,6 +16,23 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+from py_eureka_client import eureka_client
+
+# Configuration Eureka
+EUREKA_SERVER = "http://localhost:8081/eureka"
+INSTANCE_HOST = "localhost"
+INSTANCE_PORT = 8000  # Port de votre application Django
+
+# Enregistrement du service
+eureka_client.init(
+    eureka_server=EUREKA_SERVER,
+    app_name="IaModel-ms",
+    instance_host=INSTANCE_HOST,
+    instance_port=INSTANCE_PORT,
+    renewal_interval_in_secs=5,
+    region="default"
+)
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
