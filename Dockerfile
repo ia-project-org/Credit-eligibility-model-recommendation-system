@@ -33,12 +33,6 @@ FROM python:3.11-slim
 # Set the working directory in the runtime container
 WORKDIR /app
 
-# Copy only the necessary Python libraries from the build stage
-# COPY --from=base /usr/local/lib/python3.11 /usr/local/lib/python3.11
-# COPY --from=base /usr/local/bin/python3 /usr/local/bin/python3
-# COPY --from=base /usr/local/bin/pip /usr/local/bin/pip
-
-
 COPY --from=base /usr/local /usr/local
 COPY --from=base /app /app
 
