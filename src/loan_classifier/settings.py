@@ -19,8 +19,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 from py_eureka_client import eureka_client
 
 # Configuration Eureka
-EUREKA_SERVER = "http://localhost:8081/eureka"
-INSTANCE_HOST = "localhost"
+EUREKA_SERVER = "http://34.41.170.207:32003/eureka"
+INSTANCE_HOST = "iamodel-service"
 INSTANCE_PORT = 8000  # Port de votre application Django
 
 # Enregistrement du service
@@ -42,7 +42,7 @@ SECRET_KEY = 'django-insecure-dcbsetc0s-0^)0tm&717-(dq6lfg3*ubefaz+4=d#)^hnh-pa)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
