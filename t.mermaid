@@ -1,0 +1,46 @@
+sequenceDiagram
+    participant U as 👤 User
+    participant F as 🖥️ Frontend
+    participant K as 🔐 Keycloak
+    participant A as 🚀 API
+    participant D as 💾 Database
+
+    %% Définition des styles
+    rect rgb(240, 248, 255)
+        Note over U,D: Flux d'authentification et d'autorisation Keycloak
+    end
+
+    %% Étape 1: Accès initial
+    U->>+F: Accède à l'application
+    activate U
+    rect rgb(230, 240, 255)
+        F->>+K: Redirection vers login
+        K->>U: Page de connexion
+        U->>K: Credentials
+        K-->>F: Access Token + Refresh Token
+        deactivate K
+    end
+
+    %% Étape 2: Appel API
+    rect rgb(255, 240, 245)
+        F->>+A: Requête avec Access Token
+        A->>K: Validation du token
+        K-->>A: Token validé
+    end
+
+    %% Étape 3: Accès données
+    rect rgb(240, 255, 240)
+        A->>+D: Requête de données
+        D-->>-A: Données
+        A-->>F: Réponse
+        deactivate A
+    end
+
+    %% Étape finale
+    F-->>-U: Affichage des données
+    deactivate U
+
+    %% Notes explicatives
+    Note over U,F: Phase d'authentification utilisateur
+    Note over F,K: Gestion des tokens
+    Note over A,D: Accès aux données sécurisé

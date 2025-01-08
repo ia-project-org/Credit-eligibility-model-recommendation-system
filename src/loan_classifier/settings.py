@@ -19,8 +19,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 from py_eureka_client import eureka_client
 
 # Configuration Eureka
-EUREKA_SERVER = "http://localhost:8081/eureka"
-INSTANCE_HOST = "localhost"
+EUREKA_SERVER = "https://eureka-server-discovery.onrender.com/eureka/"
+INSTANCE_HOST = "eureka-server-discovery.onrender.com"
 INSTANCE_PORT = 8000  # Port de votre application Django
 
 # Enregistrement du service
